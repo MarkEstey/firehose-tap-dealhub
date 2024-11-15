@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "firehose-tap-dealhub"
+version = "0.1.0"
+description = "`firehose-tap-dealhub` is a Singer tap for DealHub, built with the Meltano Singer SDK."
+readme = "README.md"
+authors = ["Mark Estey"]
+keywords = [
+    "ELT",
+    "DealHub",
+]
+license = "Apache-2.0"
+packages = [
+    { include = "tap_dealhub" },
+]
+
+[tool.poetry.dependencies]
+python = "<3.13,>=3.8"
+python-json-logger = "~=2.0"
+importlib-resources = { version = "==6.4.*", python = "<3.9" }
+singer-sdk = { version="~=0.41.0" }
+fs-s3fs = { version = "~=1.1.1", optional = true }
+requests = "~=2.32.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8"
+singer-sdk = { version="~=0.41.0", extras = ["testing"] }
+
+[tool.poetry.extras]
+s3 = ["fs-s3fs"]
+
+[build-system]
+requires = ["poetry-core==1.9.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+# CLI declaration
+tap-dealhub = 'tap_dealhub.tap:TapDealHub.cli'

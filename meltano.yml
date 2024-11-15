@@ -1,0 +1,38 @@
+version: 1
+send_anonymous_usage_stats: true
+project_id: tap-dealhub
+default_environment: test
+
+environments:
+- name: test
+
+plugins:
+  extractors:
+  - name: tap-dealhub
+    variant: firehose
+    namespace: tap_dealhub
+    pip_url: -e .
+    repo: https://github.com/MarkEstey/firehose-tap-dealhub
+    maintenance_status: development
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    settings:
+    - { name: bearer_token, kind: string, sensitive: true }
+    - { name: page_size, kind: integer }
+    - { name: start_date, kind: date_iso8601 }
+    - { name: stream_maps_config, kind: object }
+    - { name: stream_maps, kind: object }
+    - { name: stream_type_conformance, kind: string }
+    - { name: url_base, kind: string }
+    select:
+    - '*.*'
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+    config:
+      do_timestamp_file: true
