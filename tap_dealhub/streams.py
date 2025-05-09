@@ -141,38 +141,3 @@ class Quotes(DealHubStream):
 
     def get_url_params(self, context, next_page_token):
         return super().get_url_params(context, next_page_token) | { 'feature': 'all' }
-
-    # Quotes with deleted approvers will always error on request and stop the pipeline
-    # As a temporary workaround, retry failed requests once without approvers otherwise skip entirely with dummy record
-    def request_decorator(self, func):
-        def request_handler(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except (
-                    ConnectionResetError,
-                    FatalAPIError,
-                    RetriableAPIError,
-                    requests.exceptions.Timeout,
-                    requests.exceptions.ConnectionError,
-                    requests.exceptions.ChunkedEncodingError,
-                    requests.exceptions.ContentDecodingError,
-                ) as exception:
-                logging.warning(f'Retrying downgraded request {args[0].url} on error: {exception}')
-                args[0].url = args[0].url.replace('feature=all', 'feature=info&feature=summary&feature=deal_room_info&feature=line_items&feature=answers')
-                try:
-                    return func(*args, **kwargs)
-                except (
-                        ConnectionResetError,
-                        FatalAPIError,
-                        RetriableAPIError,
-                        requests.exceptions.Timeout,
-                        requests.exceptions.ConnectionError,
-                        requests.exceptions.ChunkedEncodingError,
-                        requests.exceptions.ContentDecodingError,
-                    ) as exception:
-                    logging.error(f'Skipping request {args[0].url} on error: {exception}')
-                    unknown_response = requests.Response()
-                    unknown_response.status_code = 200
-                    unknown_response._content = b'{"info":{"more_results_matching_the_request":true},"quotes":[{"dealhub_quote_id":"unknown"}]}'
-                    return unknown_response
-        return request_handler
